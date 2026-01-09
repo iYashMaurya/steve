@@ -76,7 +76,12 @@ func (w *tableConvertWatch) ResultChan() <-chan k8sWatch.Event {
 }
 
 func (w *tableConvertWatch) Stop() {
-	close(w.done)
+	select {
+	case <-w.done:
+		return
+	default:
+		close(w.done)
+	}
 	w.Interface.Stop()
 }
 

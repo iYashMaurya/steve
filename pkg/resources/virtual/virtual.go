@@ -60,10 +60,18 @@ func (t *TransformBuilder) GetTransformFunc(gvk schema.GroupVersionKind, columns
 					return obj, err
 				}
 
+				logrus.Infof("Transform selected for gvk=%s isCRD=%v columns=%d", gvk, isCRD, len(columns))
+
+				logrus.Infof("DATE FIELD PROCESSING: gvk=%s isCRD=%v col.Name=%q col.Type=%q col.Field=%q value=%v (%T)",
+					gvk.String(), isCRD, col.Name, col.Type, col.Field, curValue[index], curValue[index])
+
 				value, cast := curValue[index].(string)
 				if !cast {
 					return obj, fmt.Errorf("could not cast metadata.fields[%d] to string, original value: <%v>", index, curValue[index])
 				}
+
+				logrus.Infof("DATE FIELD HIT: gvk=%s isCRD=%v col.Name=%q col.Type=%q col.Field=%q value=%v (%T)",
+					gvk.String(), isCRD, col.Name, col.Type, col.Field, value, value)
 
 				duration, err := rescommon.ParseTimestampOrHumanReadableDuration(value)
 				if err != nil {

@@ -41,17 +41,17 @@ func (d *DynamicColumns) SetColumns(ctx context.Context, schema *types.APISchema
 	// 	return nil
 	// }
 
-	if cols := attributes.Columns(schema); cols != nil {
-		// FIX: Assert that 'cols' is actually a slice of ColumnDefinition
-		if colSlice, ok := cols.([]ColumnDefinition); ok {
-			logrus.Infof("DEBUG: Skipping SetColumns for %s. Found %d cached columns (stale cache). First field: %s",
-				schema.ID, len(colSlice), colSlice[0].Field)
-		} else {
-			// Fallback if the cast fails
-			logrus.Infof("DEBUG: Skipping SetColumns for %s. Cached columns found but type is %T", schema.ID, cols)
-		}
-		return nil
-	}
+	// if cols := attributes.Columns(schema); cols != nil {
+	// 	// FIX: Assert that 'cols' is actually a slice of ColumnDefinition
+	// 	if colSlice, ok := cols.([]ColumnDefinition); ok {
+	// 		logrus.Infof("DEBUG: Skipping SetColumns for %s. Found %d cached columns (stale cache). First field: %s",
+	// 			schema.ID, len(colSlice), colSlice[0].Field)
+	// 	} else {
+	// 		// Fallback if the cast fails
+	// 		logrus.Infof("DEBUG: Skipping SetColumns for %s. Cached columns found but type is %T", schema.ID, cols)
+	// 	}
+	// 	return nil
+	// }
 
 	gvr := attributes.GVR(schema)
 

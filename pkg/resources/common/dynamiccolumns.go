@@ -7,6 +7,7 @@ import (
 	"github.com/rancher/apiserver/pkg/types"
 	"github.com/rancher/steve/pkg/attributes"
 	"github.com/rancher/wrangler/v3/pkg/ratelimit"
+	"github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/apis/meta/internalversion"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	metav1beta1 "k8s.io/apimachinery/pkg/apis/meta/v1beta1"
@@ -36,11 +37,26 @@ func NewDynamicColumns(config *rest.Config) (*DynamicColumns, error) {
 }
 
 func (d *DynamicColumns) SetColumns(ctx context.Context, schema *types.APISchema) error {
-	if attributes.Columns(schema) != nil {
+	// if attributes.Columns(schema) != nil {
+	// 	return nil
+	// }
+
+	if cols := attributes.Columns(schema); cols != nil {
+		// FIX: Assert that 'cols' is actually a slice of ColumnDefinition
+		if colSlice, ok := cols.([]ColumnDefinition); ok {
+			logrus.Infof("DEBUG: Skipping SetColumns for %s. Found %d cached columns (stale cache). First field: %s",
+				schema.ID, len(colSlice), colSlice[0].Field)
+		} else {
+			// Fallback if the cast fails
+			logrus.Infof("DEBUG: Skipping SetColumns for %s. Cached columns found but type is %T", schema.ID, cols)
+		}
 		return nil
 	}
 
 	gvr := attributes.GVR(schema)
+
+	logrus.Infof("DEBUG: Fetching live columns for GVR: %v", gvr)
+
 	if gvr.Resource == "" {
 		return nil
 	}
@@ -70,6 +86,7 @@ func (d *DynamicColumns) SetColumns(ctx context.Context, schema *types.APISchema
 	if len(t.ColumnDefinitions) > 0 {
 		var cols []ColumnDefinition
 		for i, colDef := range t.ColumnDefinitions {
+			logrus.Infof("DEBUG: Mapping Column '%s' to Index [%d]", colDef.Name, i)
 			cols = append(cols, ColumnDefinition{
 				TableColumnDefinition: colDef,
 				Field:                 fmt.Sprintf("$.metadata.fields[%d]", i),

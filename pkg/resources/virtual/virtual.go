@@ -73,6 +73,14 @@ func (t *TransformBuilder) GetTransformFunc(gvk schema.GroupVersionKind, columns
 				logrus.Infof("DATE FIELD HIT: gvk=%s isCRD=%v col.Name=%q col.Type=%q col.Field=%q value=%v (%T)",
 					gvk.String(), isCRD, col.Name, col.Type, col.Field, value, value)
 
+
+				if len(value) > 0 && (value[0] < '0' || value[0] > '9') {
+                // This is likely a Name or Status string, not a timestamp. 
+                // Silence the error or log as debug only.
+                       logrus.Debugf("Skipping date parse for non-date value: %s at index %d", value, index)
+                       return obj, nil 
+                }
+
 				duration, err := rescommon.ParseTimestampOrHumanReadableDuration(value)
 				if err != nil {
 					logrus.Errorf("parse timestamp %s, failed with error: %s", value, err)
